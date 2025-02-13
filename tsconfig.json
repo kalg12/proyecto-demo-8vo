@@ -13,6 +13,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "experimentalDecorators": true, // ✅ Habilita el soporte para decoradores
+    "emitDecoratorMetadata": true, // ✅ Permite que TypeORM use metadatos en los decoradores
+    "strictPropertyInitialization": false, // ✅ Evita errores con inicialización de propiedades
     "plugins": [
       {
         "name": "next"
