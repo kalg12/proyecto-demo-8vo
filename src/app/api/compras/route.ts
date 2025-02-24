@@ -1,4 +1,6 @@
 import { Compra } from "app/entities/Compra";
+import { Producto } from "app/entities/Producto";
+import { Proveedor } from "app/entities/Proveedor";
 import { AppDataSource } from "app/lib/data-source";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,8 +17,35 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const compraRepo = AppDataSource.getRepository(Compra);
+  const proveedorRepo = AppDataSource.getRepository(Proveedor);
+  const productoRepo = AppDataSource.getRepository(Producto);
 
-  const newCompra = compraRepo.create(body);
+  const proveedor = await proveedorRepo.findOneBy({ id: body.proveedor_id });
+  const producto = await productoRepo.findOneBy({ id: body.producto_id });
+
+  if (!proveedor || !producto) {
+    return NextResponse.json(
+      { message: "Proveedor o Producto no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  if (producto.stock < body.cantidad) {
+    return NextResponse.json(
+      { message: "Stock insuficiente para el producto" },
+      { status: 400 }
+    );
+  }
+
+  producto.stock -= body.cantidad;
+  await productoRepo.save(producto);
+
+  const newCompra = compraRepo.create({
+    ...body,
+    proveedor: proveedor,
+    producto: producto,
+  });
+
   await compraRepo.save(newCompra);
 
   return NextResponse.json(newCompra, { status: 201 });
